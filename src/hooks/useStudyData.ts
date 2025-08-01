@@ -1,13 +1,14 @@
 import { useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { Objective, WeeklyTask, DailyTask, PomodoroSession } from '../types';
+import { generateIELTSTasks } from '../utils/ieltsTasks';
 
 const initialObjectives: Objective[] = [
   {
     id: 'ielts',
     title: 'IELTS Preparation',
     description: 'Achieve band 8.0 in IELTS exam',
-    totalTasks: 120,
+    totalTasks: 129,
     completedTasks: 0,
     color: 'bg-blue-500',
     icon: '🎯'
@@ -43,7 +44,7 @@ const initialObjectives: Objective[] = [
 
 export function useStudyData() {
   const [objectives, setObjectives] = useLocalStorage<Objective[]>('study-objectives', initialObjectives);
-  const [weeklyTasks, setWeeklyTasks] = useLocalStorage<WeeklyTask[]>('weekly-tasks', []);
+  const [weeklyTasks, setWeeklyTasks] = useLocalStorage<WeeklyTask[]>('weekly-tasks', generateIELTSTasks());
   const [dailyTasks, setDailyTasks] = useLocalStorage<DailyTask[]>('daily-tasks', []);
   const [pomodoroSessions, setPomodoroSessions] = useLocalStorage<PomodoroSession[]>('pomodoro-sessions', []);
 
