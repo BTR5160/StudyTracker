@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Settings, Clock } from 'lucide-react';
+import { Play, Pause, RotateCcw, Settings } from 'lucide-react';
 import { Objective } from '../types';
 
 interface PomodoroTimerProps {
@@ -18,7 +18,6 @@ export function PomodoroTimer({ objectives, onSessionComplete }: PomodoroTimerPr
   const [showSettings, setShowSettings] = useState(false);
   
   const intervalRef = useRef<NodeJS.Timeout>();
-  const audioRef = useRef<HTMLAudioElement>();
 
   // Presets
   const presets = [
@@ -54,7 +53,9 @@ export function PomodoroTimer({ objectives, onSessionComplete }: PomodoroTimerPr
     try {
       const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+H2v2YcBSuQz/LKfSwFJHfH8N2QQAoUXrTp66hVFApGn+H2v2YcBSuQz/LKfS');
       audio.play().catch(() => {}); // Ignore errors
-    } catch (e) {}
+    } catch {
+      // ignore playback errors
+    }
 
     if (selectedObjective) {
       onSessionComplete({

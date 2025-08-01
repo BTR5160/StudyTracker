@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import { Objective, WeeklyTask, DailyTask, PomodoroSession } from '../types';
 
@@ -46,6 +47,41 @@ export function useStudyData() {
   const [dailyTasks, setDailyTasks] = useLocalStorage<DailyTask[]>('daily-tasks', []);
   const [pomodoroSessions, setPomodoroSessions] = useLocalStorage<PomodoroSession[]>('pomodoro-sessions', []);
 
+  // Sync weekly tasks to daily tasks for the current day
+  // Ensures tasks with due dates for today automatically appear in Daily Tasks
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+
+    setDailyTasks(prev => {
+      // Keep existing daily tasks that are not linked to weekly tasks or are still due today
+      const validWeeklyIds = new Set(
+        weeklyTasks.filter(w => w.dueDate === today).map(w => w.id)
+      );
+      const filtered = prev.filter(
+        task => !task.weeklyTaskId || validWeeklyIds.has(task.weeklyTaskId)
+      );
+
+      // Determine which weekly tasks for today are not yet in daily tasks
+      const existingIds = new Set(
+        filtered.filter(t => t.weeklyTaskId).map(t => t.weeklyTaskId as string)
+      );
+
+      const newDailyTasks: DailyTask[] = weeklyTasks
+        .filter(w => w.dueDate === today && !existingIds.has(w.id))
+        .map(w => ({
+          id: Date.now().toString() + Math.random().toString(36).slice(2),
+          objectiveId: w.objectiveId,
+          title: w.title,
+          completed: w.completed,
+          timeSpent: 0,
+          createdAt: new Date().toISOString(),
+          weeklyTaskId: w.id
+        }));
+
+      return [...filtered, ...newDailyTasks];
+    });
+  }, [weeklyTasks, setDailyTasks]);
+
   const updateObjectiveProgress = (objectiveId: string, completedTasks: number) => {
     setObjectives(prev => prev.map(obj =>
       obj.id === objectiveId ? { ...obj, completedTasks } : obj
@@ -61,14 +97,35 @@ export function useStudyData() {
   };
 
   const toggleWeeklyTask = (taskId: string) => {
-    setWeeklyTasks(prev => prev.map(task =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
+    setWeeklyTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      const updated = prev.map(t =>
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      );
+      if (task) {
+        const newStatus = !task.completed;
+        setDailyTasks(d => d.map(dt =>
+          dt.weeklyTaskId === taskId ? { ...dt, completed: newStatus } : dt
+        ));
+      }
+      return updated;
+    });
   };
 
   const updateWeeklyTask = (taskId: string, updates: Partial<WeeklyTask>) => {
     setWeeklyTasks(prev => prev.map(task =>
       task.id === taskId ? { ...task, ...updates } : task
+    ));
+    // Propagate updates to linked daily tasks
+    setDailyTasks(prev => prev.map(task =>
+      task.weeklyTaskId === taskId
+        ? {
+            ...task,
+            objectiveId: updates.objectiveId ?? task.objectiveId,
+            title: updates.title ?? task.title,
+            completed: updates.completed ?? task.completed
+          }
+        : task
     ));
   };
 
@@ -85,19 +142,43 @@ export function useStudyData() {
   };
 
   const toggleDailyTask = (taskId: string) => {
-    setDailyTasks(prev => prev.map(task =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    ));
+    setDailyTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      if (task?.weeklyTaskId) {
+        setWeeklyTasks(prevW => prevW.map(w =>
+          w.id === task.weeklyTaskId ? { ...w, completed: !task.completed } : w
+        ));
+      }
+      return prev.map(t =>
+        t.id === taskId ? { ...t, completed: !t.completed } : t
+      );
+    });
   };
 
   const updateDailyTask = (taskId: string, updates: Partial<DailyTask>) => {
-    setDailyTasks(prev => prev.map(task =>
-      task.id === taskId ? { ...task, ...updates } : task
-    ));
+    setDailyTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      if (task?.weeklyTaskId) {
+        setWeeklyTasks(prevW => prevW.map(w =>
+          w.id === task.weeklyTaskId ? {
+            ...w,
+            objectiveId: updates.objectiveId ?? w.objectiveId,
+            title: updates.title ?? w.title
+          } : w
+        ));
+      }
+      return prev.map(t => t.id === taskId ? { ...t, ...updates } : t);
+    });
   };
 
   const deleteDailyTask = (taskId: string) => {
-    setDailyTasks(prev => prev.filter(task => task.id !== taskId));
+    setDailyTasks(prev => {
+      const task = prev.find(t => t.id === taskId);
+      if (task?.weeklyTaskId) {
+        setWeeklyTasks(prevW => prevW.filter(w => w.id !== task.weeklyTaskId));
+      }
+      return prev.filter(t => t.id !== taskId);
+    });
   };
 
   const addPomodoroSession = (session: Omit<PomodoroSession, 'id'>) => {

@@ -1,18 +1,17 @@
 import React from 'react';
 import { Download, FileText, Table } from 'lucide-react';
-import { Objective, WeeklyTask, DailyTask, PomodoroSession } from '../types';
+import { Objective, WeeklyTask, DailyTask } from '../types';
 import { exportToCSV, exportToPDF } from '../utils/exportUtils';
 
 interface ExportPanelProps {
   objectives: Objective[];
   weeklyTasks: WeeklyTask[];
   dailyTasks: DailyTask[];
-  pomodoroSessions: PomodoroSession[];
 }
 
-export function ExportPanel({ objectives, weeklyTasks, dailyTasks, pomodoroSessions }: ExportPanelProps) {
+export function ExportPanel({ objectives, weeklyTasks, dailyTasks }: ExportPanelProps) {
   const handleExportCSV = () => {
-    exportToCSV(objectives, weeklyTasks, dailyTasks, pomodoroSessions);
+    exportToCSV(objectives, weeklyTasks, dailyTasks);
   };
 
   const handleExportPDF = () => {
