@@ -66,6 +66,16 @@ export function useStudyData() {
     ));
   };
 
+  const updateWeeklyTask = (taskId: string, updates: Partial<WeeklyTask>) => {
+    setWeeklyTasks(prev => prev.map(task =>
+      task.id === taskId ? { ...task, ...updates } : task
+    ));
+  };
+
+  const deleteWeeklyTask = (taskId: string) => {
+    setWeeklyTasks(prev => prev.filter(task => task.id !== taskId));
+  };
+
   const addDailyTask = (task: Omit<DailyTask, 'id'>) => {
     const newTask: DailyTask = {
       ...task,
@@ -78,6 +88,16 @@ export function useStudyData() {
     setDailyTasks(prev => prev.map(task =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     ));
+  };
+
+  const updateDailyTask = (taskId: string, updates: Partial<DailyTask>) => {
+    setDailyTasks(prev => prev.map(task =>
+      task.id === taskId ? { ...task, ...updates } : task
+    ));
+  };
+
+  const deleteDailyTask = (taskId: string) => {
+    setDailyTasks(prev => prev.filter(task => task.id !== taskId));
   };
 
   const addPomodoroSession = (session: Omit<PomodoroSession, 'id'>) => {
@@ -96,8 +116,12 @@ export function useStudyData() {
     updateObjectiveProgress,
     addWeeklyTask,
     toggleWeeklyTask,
+    updateWeeklyTask,
+    deleteWeeklyTask,
     addDailyTask,
     toggleDailyTask,
+    updateDailyTask,
+    deleteDailyTask,
     addPomodoroSession
   };
 }

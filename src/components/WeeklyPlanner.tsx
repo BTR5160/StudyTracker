@@ -1,21 +1,29 @@
 import React, { useState } from 'react';
 import { WeeklyTask, Objective } from '../types';
-import { Plus, Calendar, Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Plus, Calendar, Clock, AlertCircle, CheckCircle2, Pencil, Trash2 } from 'lucide-react';
 
 interface WeeklyPlannerProps {
   objectives: Objective[];
   weeklyTasks: WeeklyTask[];
   onAddTask: (task: Omit<WeeklyTask, 'id'>) => void;
   onToggleTask: (taskId: string) => void;
+  onEditTask: (taskId: string, updates: Partial<WeeklyTask>) => void;
+  onDeleteTask: (taskId: string) => void;
 }
 
-export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask }: WeeklyPlannerProps) {
+export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask, onEditTask, onDeleteTask }: WeeklyPlannerProps) {
   const [showAddTask, setShowAddTask] = useState(false);
   const [selectedObjective, setSelectedObjective] = useState('');
   const [taskTitle, setTaskTitle] = useState('');
   const [taskDescription, setTaskDescription] = useState('');
   const [taskPriority, setTaskPriority] = useState<'low' | 'medium' | 'high'>('medium');
   const [dueDate, setDueDate] = useState('');
+  const [editingTask, setEditingTask] = useState<WeeklyTask | null>(null);
+  const [editObjective, setEditObjective] = useState('');
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editPriority, setEditPriority] = useState<'low' | 'medium' | 'high'>('medium');
+  const [editDueDate, setEditDueDate] = useState('');
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +46,34 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
     setShowAddTask(false);
   };
 
+  const startEditTask = (task: WeeklyTask) => {
+    setEditingTask(task);
+    setEditObjective(task.objectiveId);
+    setEditTitle(task.title);
+    setEditDescription(task.description);
+    setEditPriority(task.priority);
+    setEditDueDate(task.dueDate);
+  };
+
+  const handleEditTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingTask || !editTitle.trim() || !editObjective || !editDueDate) return;
+    onEditTask(editingTask.id, {
+      objectiveId: editObjective,
+      title: editTitle.trim(),
+      description: editDescription.trim(),
+      priority: editPriority,
+      dueDate: editDueDate
+    });
+    setEditingTask(null);
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    if (confirm('Delete this task?')) {
+      onDeleteTask(taskId);
+    }
+  };
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20';
@@ -52,6 +88,7 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
   };
 
   return (
+    <>
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="mb-8">
         <div className="flex items-center justify-between">
@@ -234,7 +271,7 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
                       >
                         {task.completed ? <CheckCircle2 size={20} /> : <div className="w-5 h-5 border-2 border-current rounded-full" />}
                       </button>
-                      
+
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center space-x-2">
                           <h4 className={`font-medium ${
@@ -248,7 +285,7 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
                             {task.priority}
                           </span>
                         </div>
-                        
+
                         {task.description && (
                           <p className={`text-sm mt-1 ${
                             task.completed
@@ -258,7 +295,7 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
                             {task.description}
                           </p>
                         )}
-                        
+
                         <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500 dark:text-gray-400">
                           <div className="flex items-center space-x-1">
                             <Clock size={12} />
@@ -272,6 +309,21 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
                           )}
                         </div>
                       </div>
+
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={() => startEditTask(task)}
+                          className="text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
+                        >
+                          <Pencil size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteTask(task.id)}
+                          className="text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
                     </div>
                   ))
                 )}
@@ -281,5 +333,94 @@ export function WeeklyPlanner({ objectives, weeklyTasks, onAddTask, onToggleTask
         })}
       </div>
     </div>
+
+      {editingTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Edit Weekly Task</h3>
+            <form onSubmit={handleEditTask} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Objective</label>
+                <select
+                  value={editObjective}
+                  onChange={(e) => setEditObjective(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  required
+                >
+                  <option value="">Select objective...</option>
+                  {objectives.map(obj => (
+                    <option key={obj.id} value={obj.id}>{obj.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Task Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  placeholder="Enter task title..."
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description (optional)</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  rows={2}
+                />
+              </div>
+
+              <div className="flex space-x-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Priority</label>
+                  <select
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value as 'low' | 'medium' | 'high')}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </select>
+                </div>
+
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Due Date</label>
+                  <input
+                    type="date"
+                    value={editDueDate}
+                    onChange={(e) => setEditDueDate(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => setEditingTask(null)}
+                  className="flex-1 px-4 py-2 text-gray-600 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
