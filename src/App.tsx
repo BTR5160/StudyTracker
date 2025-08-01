@@ -21,8 +21,12 @@ function App() {
     updateObjectiveProgress,
     addWeeklyTask,
     toggleWeeklyTask,
+    updateWeeklyTask,
+    deleteWeeklyTask,
     addDailyTask,
     toggleDailyTask,
+    updateDailyTask,
+    deleteDailyTask,
     addPomodoroSession
   } = useStudyData();
 
@@ -67,6 +71,8 @@ function App() {
             weeklyTasks={weeklyTasks}
             onAddTask={addWeeklyTask}
             onToggleTask={toggleWeeklyTask}
+            onEditTask={updateWeeklyTask}
+            onDeleteTask={deleteWeeklyTask}
           />
         );
       case 'daily':
@@ -76,6 +82,8 @@ function App() {
             dailyTasks={dailyTasks}
             onAddTask={addDailyTask}
             onToggleTask={toggleDailyTask}
+            onEditTask={updateDailyTask}
+            onDeleteTask={deleteDailyTask}
           />
         );
       case 'timer':
