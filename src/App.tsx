@@ -17,7 +17,6 @@ function App() {
     objectives,
     weeklyTasks,
     dailyTasks,
-    pomodoroSessions,
     updateObjectiveProgress,
     addWeeklyTask,
     toggleWeeklyTask,
@@ -117,7 +116,6 @@ function App() {
               objectives={objectives}
               weeklyTasks={weeklyTasks}
               dailyTasks={dailyTasks}
-              pomodoroSessions={pomodoroSessions}
             />
           </div>
         )}

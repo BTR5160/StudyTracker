@@ -25,6 +25,7 @@ export interface DailyTask {
   completed: boolean;
   timeSpent: number; // in minutes
   createdAt: string;
+  weeklyTaskId?: string;
 }
 
 export interface PomodoroSession {

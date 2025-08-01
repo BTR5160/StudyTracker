@@ -1,10 +1,9 @@
-import { Objective, WeeklyTask, DailyTask, PomodoroSession } from '../types';
+import { Objective, WeeklyTask, DailyTask } from '../types';
 
 export function exportToCSV(
   objectives: Objective[],
   weeklyTasks: WeeklyTask[],
-  dailyTasks: DailyTask[],
-  pomodoroSessions: PomodoroSession[]
+  dailyTasks: DailyTask[]
 ) {
   const csvContent = [
     // Headers
